@@ -160,3 +160,7 @@ cython_debug/
 #.idea/
 
 downloads/*
+
+merged_file.xlsx
+
+.~lock.merged_file.xlsx#

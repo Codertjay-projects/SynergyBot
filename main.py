@@ -1,6 +1,8 @@
 import os
 import time
+import warnings
 
+import pandas as pd
 from decouple import config
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -9,10 +11,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
+# Suppress openpyxl UserWarning
+warnings.simplefilter("ignore", category=UserWarning)
+
 BASE_URL = "https://auth.synergysportstech.com/Account/Login"
 leaderbord_page = "https://apps.synergysports.com/basketball/leaderboards?leagueId=54457dce300969b132fcfb37&seasonId=64da359a0d288f7495c0bdc9&competitionIds=non-exhibition-54457dce300969b132fcfb37&comparisonGroupId=648ac7b0a79824aa31db2b35"
-
-download_path = "/home/codertjay/PycharmProjects/SynergyBot"
 
 
 class SynergyBot:
@@ -30,11 +33,11 @@ class SynergyBot:
         self.leaderboard_page = leaderbord_page
 
         # Set the download path
-        download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloads')
+        self.download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloads')
 
-        print(download_path)
+        print(self.download_path)
         self.options.add_experimental_option("prefs", {
-            "download.default_directory": download_path,
+            "download.default_directory": self.download_path,
             "download.prompt_for_download": False,
             "download.directory_upgrade": True,
             "safebrowsing.enabled": True
@@ -127,6 +130,35 @@ class SynergyBot:
         download_button.click()
         time.sleep(2)
 
+    def get_files(self):
+        files = []
+        for f in os.listdir(self.download_path):
+            if f.endswith('.xlsx'):
+                files.append(f)
+        return files
+
+    def get_sheet_name(self, file):
+        try:
+            base_name = os.path.splitext(file)[0]
+            if len(base_name) > 31:
+                base_name = base_name[64:94]
+        except:
+            base_name = base_name[:31]
+        return base_name
+
+    def merge_data(self):
+        # Loop through each file, read it into a DataFrame, and write it to a new Excel file with
+        # a sheet name corresponding to the file name
+        with pd.ExcelWriter('merged_file.xlsx') as writer:
+            files = self.get_files()
+            for file in files:
+                try:
+                    df = pd.read_excel(os.path.join(self.download_path, file), engine='openpyxl')
+                    sheet_name = self.get_sheet_name(file)
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)
+                except Exception as e:
+                    print("Error reading file :", e)
+
 
 try:
 
@@ -136,7 +168,8 @@ try:
     bot.submit_login_form()
     bot.select_team_tag(text="Team Offensive")
     bot.select_team_tag(text="Team Defensive")
-    print("Exiting")
-
+    time.sleep(10)
+    print("MERGING FILES")
+    bot.merge_data()
 except Exception as a:
     print(a)
