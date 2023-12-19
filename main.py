@@ -82,6 +82,9 @@ class SynergyBot:
 
     def select_team_tag(self, text):
         self.driver.get(self.leaderboard_page)
+
+        self.select_division()
+
         # Find the ng-select dropdown element
         ng_select = self.driver.find_element(
             by=By.CSS_SELECTOR,
@@ -102,7 +105,31 @@ class SynergyBot:
                 break
 
         time.sleep(3)
+
         self.click_on_all_play_types(text)
+
+    def select_division(self):
+        """
+        Used to select the the division
+        :return:
+        """
+        element = self.driver.find_elements(by=By.CSS_SELECTOR, value='div[class="pb-3 ng-star-inserted"]')[2]
+
+        division_selector = element.find_element(by=By.CSS_SELECTOR,
+                                                 value='ts-filter-select[class="ng-untouched ng-pristine ng-valid"]')
+        division_selector.click()
+
+        time.sleep(2)
+        dropdown_options = division_selector.find_elements(by=By.CSS_SELECTOR,
+                                                           value='div[class="ng-option ng-star-inserted"]')
+
+        # fint the text NCA Division 1
+        for option in dropdown_options:
+            option_text = option.find_element(by=By.CSS_SELECTOR, value='span[class="ng-star-inserted"]').get_attribute(
+                "innerHTML")
+            if option_text == "NCAA Division I":
+                option.click()
+                return
 
     def click_on_all_play_types(self, text):
 
