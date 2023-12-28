@@ -138,18 +138,25 @@ class SynergyBot:
             overall_selector = element.find_element(by=By.CSS_SELECTOR, value='div[class="ng-select"]')
             overall_selector.click()
 
-            player_type_unordered_list = \
-                self.driver.find_elements(by=By.CSS_SELECTOR, value='div[class="mt-6 px-3 ng-star-inserted"]')[1]
-            player_stat = player_type_unordered_list.find_elements(by=By.TAG_NAME, value="li")[stats_counter]
+            situations = \
+                self.driver.find_elements(by=By.CSS_SELECTOR, value='div[class="mt-6 px-3 ng-star-inserted"]')
 
-            print(player_stat.get_attribute("innerHTML"))  # click the stat
-            player_stat.click()
-            time.sleep(2)
+            for situation in situations:
+                play_type_text = situation.find_element(by=By.CSS_SELECTOR,
+                                                        value='div[class="text-base border-secondary-200 border-b mb-1"]')
+                if not play_type_text:
+                    pass
+                if play_type_text.get_attribute("innerHTML") == "Play Types":
+                    player_stat = situation.find_elements(by=By.TAG_NAME, value="li")[stats_counter]
+                    print(player_stat.get_attribute("innerHTML"))  # click the stat
+                    player_stat.click()
+                    time.sleep(2)
 
-            self.download_play_type()
-            if stats_counter == 10:
-                print("Done With ", text)
-                time.sleep(5)
+                    self.download_play_type()
+                    if stats_counter == 10:
+                        print("Done With ", text)
+                        time.sleep(5)
+                    break
 
     def download_play_type(self):
         element = self.driver.find_elements(by=By.CSS_SELECTOR, value='div[class="p-2 xl:p-4"]')[4]
